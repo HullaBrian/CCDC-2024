@@ -1,0 +1,23 @@
+# Get network interfaces
+$networkInterfaces = Get-NetIPConfiguration
+
+# Display information in a table
+foreach ($interface in $networkInterfaces) {
+    Write-Host "Network Interface: $($interface.InterfaceAlias)"
+    
+    $ipv4Info = $interface | Select-Object InterfaceIndex, InterfaceAlias, 
+                @{Name='IPv4Address'; Expression={$_.IPv4Address.IPAddress}},
+                @{Name='SubnetMask'; Expression={
+                    if ($_.IPv4SubnetMask) {
+                        ($_.IPv4SubnetMask.IPAddress -as [IPAddress]).IPAddressToString
+                    } else {
+                        'N/A'
+                    }
+                }},
+                @{Name='DefaultGateway'; Expression={$_.IPv4DefaultGateway.NextHop}},
+                @{Name='DNSServers'; Expression={$_.DNSServer.ServerAddresses -join ', '}}
+
+    $ipv4Info | Format-Table -AutoSize
+    Write-Host "`n"  # Add a newline for separation
+}
+
