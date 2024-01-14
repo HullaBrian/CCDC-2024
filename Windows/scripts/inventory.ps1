@@ -98,7 +98,7 @@ foreach ($interface in $networkInterfaces) {
 
 
 # Get local user accounts
-# Get all local users
+Write-Host "`nUsers`n--------------"
 $localUsers = Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }
 
 # Display user information and groups in a table
@@ -123,3 +123,8 @@ $usersWithGroups | Format-Table -AutoSize
 Write-Host "`nStartup Tasks`n--------------------"
 Get-CimInstance Win32_StartupCommand | Select-Object Name, Command, Location, User | Format-Table -AutoSize
 
+
+
+# Get shares
+Write-Host "`nShares`n--------"
+Get-SmbShare | Format-Table -Property Name, Path, Description, FullAccess, ReadAccess -AutoSize
