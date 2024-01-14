@@ -6,9 +6,12 @@ $name = hostname
 Write-Host "Workstation / VM Identification: '$name'"
 
 
+
 # OS version
 $os_version = (Get-WmiObject -class Win32_OperatingSystem).Caption
 Write-Host "OS Version: '$os_version'"
+
+
 
 # Services
 #$services = Get-Process | Where-Object { $_.Company -notlike 'Microsoft*' }
@@ -25,6 +28,8 @@ $services = Get-Process | Where-Object {
 }
 $tmp = $services | Select-Object Id, ProcessName | Out-String
 Write-Host $tmp
+
+
 
 # Open Ports
 Write-Host ""
@@ -63,6 +68,7 @@ foreach ($udpPort in $openUdpPorts) {
 Write-Host ($output | Format-Table -AutoSize | Out-String)
 
 
+
 # IP Addresses
 Write-Host "Network Configuration:"
 Write-Host "----------------------`n"
@@ -89,3 +95,57 @@ foreach ($interface in $networkInterfaces) {
     Write-Host "`n"  # Add a newline for separation
 }
 
+
+
+# Get local user accounts
+# Get all local users
+$localUsers = Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }
+
+# Display user information and groups in a table
+$usersWithGroups = $localUsers | ForEach-Object {
+    $user = $_
+    $groups = ([adsi]"WinNT://./$($user.Name),user").Groups() | ForEach-Object {
+        $_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)
+    }
+
+    [PSCustomObject]@{
+        'Caption'   = $user.Caption
+        'Username'  = $user.Name
+        'Groups'    = $groups -join ', '
+    }
+}
+
+$usersWithGroups | Format-Table -AutoSize
+
+
+
+# Change local user passwords
+# Function to generate a random password
+function Generate-RandomPassword {
+    $passwordLength = 12
+    $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()'
+    $randomPassword = -join (0..($passwordLength-1) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
+    return $randomPassword
+}
+
+# Get all local users
+$localUsers = Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }
+$userPasswords = @()
+
+# Loop through each local user
+foreach ($user in $localUsers) {
+    # Generate a random password
+    $randomPassword = Generate-RandomPassword
+
+    # Print the random password
+    # Write-Host "Username: $($user.Name), Password: $randomPassword"
+    $userPasswords += [PSCustomObject]@{
+        'Username' = $user.Name
+        'Password' = $randomPassword
+    }
+
+    # CHANGE ALL USER PASSWORDS
+    # Set-LocalUser -Name $user.Name -Password (ConvertTo-SecureString -AsPlainText $randomPassword -Force)
+}
+
+$userPasswords | Format-Table -AutoSize
