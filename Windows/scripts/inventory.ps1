@@ -117,3 +117,9 @@ $usersWithGroups = $localUsers | ForEach-Object {
 
 $usersWithGroups | Format-Table -AutoSize
 
+
+
+# Get startup tasks
+Write-Host "`nStartup Tasks`n--------------------"
+Get-CimInstance Win32_StartupCommand | Select-Object Name, Command, Location, User | Format-Table -AutoSize
+
