@@ -39,5 +39,7 @@ $args = "-accepteula -i"
 Start-Process -FilePath $executablePath -ArgumentList $args
 
 Write-Host "Deleting '$executableDirectory'"
-Remove-Item -Path $tempDownloadPath -Force
-# Remove-Item -Path $tempDirPath -Recurse -Force
+$tmp = $tempDownloadPath -replace '\.tmp$', '.zip'
+Remove-Item -Path $tmp -Recurse -Force
+icacls $executableDirectory /grant:r "$($env:USERNAME):(OI)(CI)F" /T
+Remove-Item -Path $executableDirectory -Recurse -Force
