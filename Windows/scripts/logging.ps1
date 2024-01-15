@@ -23,9 +23,10 @@ Write-Host "Enabled powershell logging"
 Write-Host "INSTALLING SYSMON"
 $tempDownloadPath = [System.IO.Path]::GetTempFileName()
 $downloadPath = $tempDownloadPath -replace '\.tmp$', ''
-$tempDirPath = Join-Path $env:TEMP "Sysmon"
-New-Item -ItemType Directory -Path $tempDirPath -Force
-$executableDirectory = Join-Path $env:TEMP "Sysmon"
+$programFilesPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ProgramFiles)  # Get around sneaky misconfigurations
+$installDirPath = Join-Path $programFilesPath "Sysmon"
+New-Item -ItemType Directory -Path $installDirPath -Force
+$executableDirectory = Join-Path $programFilesPath "Sysmon"
 
 Write-Host "Downloading Sysmon.zip to '$tempDownloadPath'"
 Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile $tempDownloadPath
@@ -34,12 +35,10 @@ Rename-Item -Path $tempDownloadPath -NewName $newDownloadPath
 Expand-Archive -Path $newDownloadPath -DestinationPath $executableDirectory -Force
 
 $executablePath = Join-Path $executableDirectory "Sysmon.exe"
-Write-Host "executing '$executablePath'"
+Write-Host "Executing '$executablePath'"
 $args = "-accepteula -i"
 Start-Process -FilePath $executablePath -ArgumentList $args
 
-Write-Host "Deleting '$executableDirectory'"
 $tmp = $tempDownloadPath -replace '\.tmp$', '.zip'
+Write-Host "Deleting '$tmp'"
 Remove-Item -Path $tmp -Recurse -Force
-icacls $executableDirectory /grant:r "$($env:USERNAME):(OI)(CI)F" /T
-Remove-Item -Path $executableDirectory -Recurse -Force
