@@ -1,0 +1,78 @@
+Linux Runbook 2018
+
+Initial housekeeping:
+# Document name/network address/routes and  Linux family (Debian vs RedHat)
+#  (see LinuxCmds for details)
+hostname
+cat /etc/*-release
+uname -a
+ifconfig
+netstat -rn
+# roll root password.
+passwd root
+# enable  logging of audit logs to syslog
+ 	vi /etc/audisp/plugins.d/syslog.conf
+   	# change active = no to active = yes
+# Append to audit.rules to monitor critical files and network ops
+	cd /etc/audit 
+echo ‘-a always,exit -F dir=/etc/ -F perm=wa -k ETC’ >> audit.rules
+	echo ‘-a always,exit -F arch=b64 -S listen -S accept -S connect -k SOCK’ >> audit.rules
+# Reboot or restart auditd 
+
+# Confirm or set static IP
+# Debian/Ubuntu:
+	vim /etc/network/interfaces
+	ifaces eth1 inet static
+	address: xxx.xx.xxx.xx
+# CentOS/RedHat/Fedora/RHEL:
+	vim /etc/sysconfig/network-scripts/ifcfg-eth0  (might also be in eth1)
+	BOOTPRO=static
+	IPADDR=xxx.xx.xxx.xx
+# Set as DNS client
+# After logging in as root:
+vim /etc/resolv.conf
+# add ISP nameserver in this format (can only have 3 at maximum)
+nameserver xxx.xx.xxx.xx
+# confirm by running
+nslookup 8.8.8.8
+
+#Pick a central logserver machine and set up rsyslogd to receive log messages:
+# Edit /etc/rsyslog.conf and uncomment (remove #)   lines:
+  	#$ModLoad imudp
+#$UDPServerRun 514
+#Restart rsyslog service
+# do tail to make sure messages from other Linux and Windows machines are getting through
+tail -F /var/log/messages (red hat)
+tail -F /var/log/syslog (debian)
+#On other machines create file in /etc/rsyslog.d/ with one line
+   	echo ‘ *.* @ip_of_logserver’ > 60-central.conf
+# Restart rsyslog service and send test message
+logger -t client `hostname`
+# Practice reboot and extraordinary access
+It’s probably worth doing at least one reboot at this point so you know what a successful boot looks like. It might also pay to first do a boot into single user in case you need to do that for recovery later on in the competition.  On a running system, practice getting a text screen in case the X-windows desktop is frozen. To do that use CTRL-ALT-F1 (you can go back to desktop with ALT-F7)
+
+
+# Get an idea of normal operation
+Familiarity is your friend and doing something before you’re forced to helps prevent stress-induced errors.
+
+It might also be good to have a window with a ‘tail -F’ running on some syslog files so you have them streaming by your eyes in the background. Note you simultaneously tail multiple logs:
+ tail -F /var/log/messages /var/log/secure   # (red hat)
+ tail -F /var/log/syslog /var/log/auth.log       # (debian)
+
+Create and validate the list of required services:
+For each Linux machine make a list of services which are part of the scoring mechanism.
+For each of those services check their configuration to see if they have dependent services
+and add those to the list.  For example, an imap mail server might well need to have a SQL database connection and also be validating userids against a Windows Server AD.
+
+For each service in the list identify any internal authentication requirements.  Using the imap server as an example again, in addition to the likelihood of  having a designated administrative user, if the server connects to a database, it is likely to have a userid/password for that DB connection stored in a configuration file. Consider rolling any passwords.
+
+Make sure you have a way to validate that all scored services are working, e.g. login to mail server; see the e-commerce page; dig for a DNS lookup; reboot a machine needing DHCP.
+
+Compare the required+dependent services to a list of active services:
+Now use the results of an nmap scan and/or the output of netstat -p…. (see LinuxCmds) to make a list of active services. 
+
+Look for any unnecessary services - stop and disable them.   For example, many previous machines had gratuitous remote access services like telnet(port 23), vnc(5900), xrdp(3389) running.  Even ssh(22) might be considered superfluous on a machine if it’s not one of the scored services. 
+
+RedHat - use ‘service’  (‘systemctl stop ...’ on RH 7) to stop services. Use ‘chkconfig’ (‘systemctl disable …’’) to disable them.
+Debian - use ‘invoke-rc.d’ (or ‘systemctl’) to stop services.  Use  ‘update-rc.d’ (‘systemctl’) to disable them.
+

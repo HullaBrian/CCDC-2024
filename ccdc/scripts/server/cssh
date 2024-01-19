@@ -1,0 +1,63 @@
+#!/usr/bin/python3
+
+# Allows ssh into any box with password stored in the password file
+# TODO, TEST THIS WITH A LARGER PASSWORD FILE
+
+import re
+import subprocess
+import sys
+
+PASSWORD_FILE_PATH = None # replace with the actual path
+
+# Poor man's argparse
+num_args = len(sys.argv)
+if num_args == 1:
+    print("Usage: cssh [host_ip] [password_list optional]")
+    print("Specify an ip address to connect to")
+if num_args == 2 and PASSWORD_FILE_PATH == None:
+    print("Usage: cssh [host_ip] [password_list optional]")
+    print("Either specify a password list in the command line or set the PASSWORD_FILE_PATH")
+    print("variable.")
+    exit(1)
+elif num_args > 3:
+    print("Usage: cssh [host_ip] [password_list optional]")
+    print("Too many args")
+    exit(1)
+
+target_ip = sys.argv[1]
+host_file = sys.argv[2]
+
+# make sure the IP is valid
+ip_regex = re.compile("^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+if not ip_regex.match(target_ip):
+    print("Invalid IP address")
+    exit(1)
+
+# make sure the file we're trying to open exists
+try:
+    passwords = open(host_file)
+except IOError:
+    print(f"Unable to locate file {host_file}")
+    exit(1)
+
+password_regex = re.compile("pass=[a-zA-Z0-9!@$%^&]+[# \t\n]")
+for line in passwords:
+    if line.startswith(target_ip):
+        if match := password_regex.search(line):
+            password = match.group()[5:-1]
+            subprocess.Popen(
+                [
+                    "/usr/bin/sshpass",
+                    "-p",
+                    password,
+                    "/usr/bin/ssh",
+                    f"root@{target_ip}"
+                ],
+            ).wait()
+            break
+        else:
+            print("Could not find a password for this host")
+            exit(1)
+else:
+    print(f"Host file does not contain the ip {target_ip}")
+    exit(1)

@@ -97,6 +97,35 @@ foreach ($interface in $networkInterfaces) {
 
 
 
+# Get domain user accounts
+Write-Host "`nDomain Users`n-----------------`n"
+# Get all domain users
+$users = Get-ADUser -Filter *
+
+# Initialize an array to store user information
+$userInfoArray = @()
+
+# Iterate through each user
+foreach ($user in $users) {
+    $userDN = $user.DistinguishedName
+    $ou = $userDN -replace '^CN=[^,]+,'
+    $groups = Get-ADUser $user | Get-ADPrincipalGroupMembership | Select-Object -ExpandProperty Name
+
+    $userInfo = [PSCustomObject]@{
+        'Username' = $user.SamAccountName
+        'OU' = $ou
+        'Groups' = $groups -join ', '
+    }
+
+    # Add user information to the array
+    $userInfoArray += $userInfo
+}
+
+# Output the combined table
+$userInfoArray | Format-Table -AutoSize
+
+
+
 # Get local user accounts
 Write-Host "`nUsers`n--------------"
 $localUsers = Get-WmiObject Win32_UserAccount | Where-Object { $_.LocalAccount -eq $true }

@@ -1,0 +1,5 @@
+/bin/ping6 = cap_net_raw+ep
+/bin/ping = cap_net_raw+ep
+/usr/bin/arping = cap_net_raw+ep
+/usr/bin/gnome-keyring-daemon = cap_ipc_lock+ep
+/usr/bin/systemd-detect-virt = cap_dac_override,cap_sys_ptrace+ep

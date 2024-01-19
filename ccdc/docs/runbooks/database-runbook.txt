@@ -1,0 +1,58 @@
+Database Runbook v1 2018 
+
+MySQL
+Login to mysql 
+mysql -u root -p 
+
+Really first, back up the db: 
+mysqldump -u root -p --opt [database name] > [database name].sql mysqldump --all-databases > dump-db.sql -u root -p 
+
+# Restore all DBs from backup (will OVERWRITE!): mysql -u root -p < dump-db.sql 
+First, roll passwords. 
+use mysql; select user, host, password from user; # to view set password for "user"@"hostname" = password("newpassword"); 
+UPDATE [table] SET [col] = [val] WHERE [key] = [key_val] flush privileges; 
+
+Limit to IP addresses to those who need 
+CREATE USER 'user'@'hostname'; GRANT ALL PRIVILEGES ON database.* TO 'user'@'[ip]/[range mask]'; 
+
+Change bind address to localhost at: /etc/mysql/my.cnf 
+local-infile=0 bind-address=127.0.0.1 
+
+Restart 
+sudo service mysql restart sudo service httpd restart 
+
+In command line, run Mysql_secure_installation 
+which will give us the options: - Set root password? [Y/n] y - Remove anonymous users? [Y/n] y - Disallow root login remotely? [Y/n] y - Remove test database and access to it? [Y/n] y - Reload privilege tables now? [Y/n] y 
+
+Migrate mysql: 
+On old server scp [database name].sql [username]@[servername]:path/to/database/ On new server: mysql -u root -p newdatabase < /path/to/newdatabase.sql 
+
+Useful SQL Commands 
+DESCRIBE table SHOW databases 
+
+Fixing MySQL Access 
+sudo mkdir /var/run/mysqld sudo chown mysql:mysql /var/run/mysqld 
+service mysql stop 
+
+#Start mysql without root password mysqld_safe --skip-grant-tables & 
+mysql -u root mysql 
+UPDATE user SET password=PASSWORD('NEW_PASSWORD') WHERE user='root'; FLUSH PRIVILEGES; 
+service mysql restart 
+
+PostgreSQL 
+Login to database: 
+psql -d mydb -U myuser -W sudo -u postgres psql -U postgres (default login) 
+
+Really first, back up the db: 
+su postgres pg_dumpall > all.sql grep "^[\]connect" all.sql (check backup) 
+
+# Restore all DBs from backup (will OVERWRITE!): psql -f alldb.sql 
+Limit access: pg_hba.conf 
+
+Roll passwords. 
+alter user usertochange with password 'new_passwd'; 
+List databases: \l Describe table: \d tablename Switch database: \connect databasename List tables: \dt Create user: CREATE USER jjasinski WITH PASSWORD 'myPassword'; Alter password: ALTER USER Postgres WITH PASSWORD 'mypass'; 
+Restart PostgreSQL 
+sudo service postgresql stop sudo service postgresql start sudo service postgresql restart 
+
+- Check that there is no SQL function with SECURITY DEFINER. - Check that only the DBA has SUPERUSER, CREATEDB oder CREATEROLE privileges. - Check that no password is equal to the user name or some "initial standard password" that your co - Check that ssl=on. - Check that nobody except for superusers has any privileges on pg_catalog.pg_authid. - Check that you are running the latest release for your version of PostgreSQL. - Check that no privileges on objects are granted to PUBLIC. - Check that no privileges on objects were granted WITH GRANT OPTION. - Check that only local users have "trust" authentication in pg_hba.conf. - Check that pg_hba.conf forces remote connections to use SSL. - Check that pg_hba.conf forbids remote connections to use "password", "crypt" or "ident" authentic 

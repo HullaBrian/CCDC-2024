@@ -1,0 +1,132 @@
+:: Misc/Extras from old runbook
+
+:: Full Defender scan
+:: "%ProgramFiles%\Windows Defender\MpCmdRun.exe" -scan -scantype 2
+
+:: Reset WMIC Repostitory 
+:: winmgmt /resetrepository
+
+:: Run Procmon64.exe:
+:: -Filter for Operation is “Process Create”
+:: -Filter for Operation contains “TCP”
+:: -Filter for Operation contains “UDP”
+
+:: Install a GUI on a server core:
+:: Install-WindowsFeature Server-Gui-Mgmt-Infra,Server-Gui-Shell –Restart –Source c:\mountdir\windows\winsxs
+
+:: Redirect TCP service using firewall
+:: netsh interface portproxy add v4tov4 listenaddress= <your address> listenport=<your port> connectaddress=<proxy address> connectport=<proxy port>
+:: Check redirections
+:: netsh interface portproxy show v4tov4
+
+goto :comment
+Inspect Windows shares for weak permissions:
+https://github.com/nccgroup/WinShareEnum
+Create a regular domain user and use his credentials for winshareenum
+Control Panel → Administrative Tools → Computer Management → Shared Folders → Shares → Inspect Properties
+:comment
+
+goto :comment
+Exclude Splunk in Sysmon config file
+<ProcessCreate onmatch="exclude">
+	<Image condition="image">splunk-admon.exe</Image>
+	<Image condition="image">splunk-MonitorNoHandle.exe</Image>
+	<Image condition="image">splunk-netmon.exe</Image>
+	<Image condition="image">splunk-regmon.exe</Image>
+	<Image condition="image">splunk-powershell.exe</Image>
+	<Image condition="image">splunk-winprintmon.exe</Image>
+	<Image condition="image">splunk-admon.exe</Image>
+	</ProcessCreate>
+
+<ProcessCreate onmatch="exclude">
+<Image condition="begins with">C:\Program Files\Splunk\bin\</Image>
+</ProcessCreate>
+:comment
+
+:: Backup Group Policies (on DC):
+:: Backup-Gpo -All -Path "C:\Temp\"
+
+goto :comment
+Check Autoruns (the tool):
+https://docs.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite
+SysinternalsSuite\Autoruns.exe (Run as Administrator)
+Options → Uncheck “Hide Microsoft Entries” and “Hide Windows Entries”
+Options → Scan Options → Check “Verify code signatures,” “Check VirusTotal.com,” and “Submit Unknown Images” → Rescan
+Be diligent with the “Logon” and “Scheduled Tasks” tabs
+:comment
+
+goto :comment
+Backup IIS site & config (if present):
+Backup IIS site:
+IIS Manager → <name of machine> → sites → <site name> →  right-click → explore →  archive all files in the directory and move archive
+Backup IIS configs:
+Cmd → %windir%\system32\inetsrv\appcmd.exe add backup “name of backup”
+File Explorer → %windir%\system32\inetsrv\backup →  archive all files in the directory and move archive
+To restore backup configs:
+Cmd → %windir%\system32\inetsrv\appcmd.exe restore backup "name of backup"
+:comment
+
+goto :comment
+Search for vulnerable GPP configuration in \\domain\sysvol
+findstr /S /I cpassword \\<domain>\sysvol\<domain>\policies\*.xml
+(See above on MS14-025)
+:comment
+
+goto :comment
+Search for vulnerable scripts (.cmd, .bat, .xml) in \\domain\sysvol
+Everything Search (Portable Version): https://www.voidtools.com/downloads/
+Everything Search → View → Filters 
+Filter to Executables
+Right-Click Columns → Select Type
+Click Type twice to order the files in reverse alphabetical type order
+:comment
+
+
+goto :comment
+Backup hMail (if present):
+To Backup hMail Settings, Domains, and Messages:
+hMailServer Administrator → Connect → Utilities → Backup
+Destination: C:\Users\<Current User>\Pictures
+Backup: Check “Setting,” “Domains,” “Messages,” and “Compress files”
+Hit Start
+
+To Restore Backup:
+hMailServer Administrator → Connect → Utilities → Backup → Restore
+Backup file: C:\Users\<Current User>\Pictures\<backup file>
+Restore: Check “Setting,” “Domains,” and “Messages”
+:comment
+
+
+goto :comment
+Optional Password Routine (will set the same password to all users; preferable when a machine has a ton of users):
+CMD → net user > C:\Users\<Current User>\Documents\User1.txt
+
+File Explorer → C:\Users\<Current User>\Documents\User1.txt
+Delete everything but the three columns of users
+
+File Explorer → Make a batch file (pass.bat) in C:\Users\<Current User>\Documents with this content:
+
+@echo off
+@cd /d "%~dp0"
+set file=User1.txt
+for /f "tokens=1,2,3" %%A in (%file%) do (
+	echo %%~A
+	if not '%%~B'=='' echo %%~B
+	if '%%~B'=='' pause
+	if not '%%~C'=='' echo %%~C
+	if '%%~C'=='' pause
+) >> User2.txt
+findstr /v /i /c:"continue" User2.txt > User.txt
+set file1=User.txt
+for /f %%A in (%file1%) do ( 
+	if not '%%~A'=='' net user %%~A <PASSWORD FROM PASSWORD SHEET>
+	if '%%~A'=='' goto phase2
+)
+:phase2
+del User1.txt
+del User2.txt
+pause
+goto :comment
+
+
+
