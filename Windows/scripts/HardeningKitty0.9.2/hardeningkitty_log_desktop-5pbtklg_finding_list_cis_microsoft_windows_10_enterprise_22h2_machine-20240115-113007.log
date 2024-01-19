@@ -1,0 +1,19 @@
+[*] 1/15/2024 11:30:07 AM - Starting HardeningKitty
+[*] 1/15/2024 11:30:07 AM - Getting machine information
+[*] Hostname: DESKTOP-5PBTKLG
+[*] Domain: WORKGROUP
+[*] Domain role: StandaloneWorkstation
+[*] Install date: 12/28/2023 21:51:51
+[*] Last Boot Time: 01/15/2024 11:04:52
+[*] Uptime: 00:25:15.0494833
+[*] Windows: Microsoft Windows 10 Pro
+[*] Windows edition: Professional
+[*] Windows version: 2009
+[*] Windows build: 19041.1.amd64fre.vb_release.191206-1406
+[*] System-locale: en-US
+[*] Powershell Version: 5.1
+[*] 1/15/2024 11:30:09 AM - Getting user information
+[*] Username: DESKTOP-5PBTKLG\user
+[*] Is Admin: True
+[*] 1/15/2024 11:30:09 AM - Creating a system restore point
+Creating a system restore point failed. Use -SkipRestorePoint to run HailMary anyway. Be careful!
