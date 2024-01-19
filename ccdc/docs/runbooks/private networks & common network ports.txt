@@ -1,0 +1,63 @@
+Private Networks & Common Ports
+
+Private IP Address Ranges
+CIDR block (subnet mask)
+# of addresses
+10.0.0.0 – 10.255.255.255
+10.0.0.0/8 (255.0.0.0)
+16777216
+172.16.0.0 – 172.31.255.255
+172.16.0.0/12 (255.240.0.0)
+1048576
+192.168.0.0 – 192.168.255.255
+192.168.0.0/16 (255.255.0.0)
+65536
+
+Ports 0-1023: Well-Known Ports * Ports 1024-49151: Registered Ports * Ports 49152-65535: Public/Unassigned
+
+20/tcp FTP - data port (FTP-d)
+21/tcp FTP - control (command) port 
+22/tcp SSH (Secure Shell) - used for secure logins, file transfers (scp, sftp) and port forwarding
+23/tcp  Telnet
+25/tcp SMTP email (Simple Mail Transport Protocol) 
+53/udp,tcp DNS (Domain Name System)
+68/udp DHCP (Dynamic Host Configuration Protocol)
+69/tcp,udp TFTP (Trivial File Transfer Protocol)
+80/tcp HTTP (HyperText Transfer Protocol)
+88/tcp Kerberos authentication
+110/tcp POP3 email (Post Office Protocol version 3) 
+135/tcp  Microsoft RPC Locator Service
+137-137/tcp NetBIOS (legacy Windows file sharing and auth)
+143/tcp IMAP4 email (Internet Message Access Protocol)
+161/tcp,udp SNMP (Simple Network Management Protocol)
+389/tcp LDAP (Lightweight Directory Access Protocol)
+443/tcp HTTPS - HTTP Protocol over TLS/SSL (encrypted)
+445/tcp,udp Microsoft File Sharing & Active Directory
+465/tcp SMTP email over SSL 
+636/tcp,udp LDAP over SSL (encrypted)
+902 VMware Server
+3306 MySQL database
+3389/tcp RDP (Remote Desktop Protocol - Windows)
+4433,4444,5555,6666,7777,8888,9999/tcp Common C2 (Command & Control)  Shell ports 
+5432/tcp PostgreSQL database
+5900-5901/tcp VNC Server
+5938/tcp Teamviewer
+8080-8081/tcp Commonly alternate port used for HTTP/HTTPS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

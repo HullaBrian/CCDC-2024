@@ -1,0 +1,30 @@
+# iptables-save output
+*mangle
+:PREROUTING ACCEPT [94:20190]
+:INPUT ACCEPT [22:1543]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [32:3613]
+:POSTROUTING ACCEPT [32:3613]
+:serviceFilter - [0:0]
+-A PREROUTING -j CONNMARK --restore-mark --nfmask 0xffffffff --ctmask 0xffffffff
+-A INPUT -m mark --mark 0x535 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 12345 -j serviceFilter
+-A serviceFilter -p tcp -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT
+-A serviceFilter -p tcp -m recent --update --name DEFAULT --mask 255.255.255.255 --rsource -m tcp --tcp-flags SYN,PSH,ACK ACK -j ACCEPT
+-A serviceFilter -p tcp -m recent --remove --name DEFAULT --mask 255.255.255.255 --rsource -m tcp --tcp-flags PSH,ACK PSH,ACK -m string --string "YourStringHere" --algo bm --to 128 -j CONNMARK --set-xmark 0x535/0xffffffff
+-A serviceFilter -m mark --mark 0x535 -j ACCEPT
+-A serviceFilter -j DROP
+COMMIT
+*filter
+:INPUT DROP [187:13764]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [1481:344930]
+:serviceFilter - [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -m mark --mark 0x535 -j ACCEPT
+# accept everything relevant here
+-A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+COMMIT
+# Be careful if you're messing with this, it's hard to get right

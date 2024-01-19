@@ -1,0 +1,60 @@
+Windows Event Forwarding & Sysmon
+
+Sysmon
+
+download and doc: https://technet.microsoft.com/en-us/sysinternals/sysmon
+
+install: sysmon -accepteula -i
+github.com/SwiftOnSecurity/sysmon-config
+sysmon.exe -c sysmonconfig-export.xml
+update config or dump config if no args: sysmon -c
+
+RegKey for Logs:
+HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-Sysmon/Operational
+
+Update/ Add Key - force
+reg add <path> /t <type> /v <key_name> /d <value> /f 
+more info about regedit (Reg query): https://technet.microsoft.com/en-us/library/cc742028(v=ws.11).aspx
+
+Sysmon Forwarding
+	- admin. cmd: 
+		- on collector: wecutil qc
+		- on forwarder: wimrm quickconfig
+	- add collector to “Event Log Readers” group
+	- Event Viewer -> subscriptions
+
+WinRM
+winrm get winrm/config
+winrm enumerate winrm/config/listener
+winrm set winrm/config/client @{TrustedHosts="<sources>"}
+winrm set winrm/config/client '@{TrustedHosts="athena,artemis"}'
+on the collector computer to allow all of the source computers to use NTLM authentication when communicating with WinRM on the collector computer
+
+More Win. Events forwarding: http://www.vkernel.ro/blog/how-to-configure-windows-event-log-forwarding
+
+GPO:
+Jessica Payne: https://blogs.technet.microsoft.com/jepayne/2015/11/23/monitoring-what-matters-windows-event-forwarding-for-everyone-even-if-you-already-have-a-siem/ 
+Recommendations for the collector server would be to use 2012R2
+When that created the WinRM listener, it also created a Service Principal Name for Kerberos authentication to the service. If something goes flakey with WEF, this is usually where it happens. 
+Once WinRM is setup -  open up Event Viewer on the Collector and navigate to the area called “Subscriptions” 
+Want the Windows Event Collector to start up automatically with the computer
+In cmd: wevtutil gl security
+Copy the channel access line (starting with “O:BAG:SYD:”) if it doesn’t end with “(A;;0x1;;;NS)” add it
+In GPO 
+Computer>Policies>Admin Templates>Windows Components>Event Forwarding>Configure target subscription manager
+This will need to be populated with the address of your collector server in this format :
+Server=http://fqdnofsubscriptionserver:5985/wsman/SubscriptionManager/WEC,Refresh=60
+60 is the refresh interval on the end that indicates how often clients should check in to see if there are new subscriptions 
+Computer>Policies>Admin Templates>Windows Components>Event Log Service>Security> Configure log access
+paste the O:BAG:SYD line 
+Make source computer initiated subscription 
+ https://blogs.technet.microsoft.com/mspfe/2011/11/22/setting-up-security-event-log-subscriptions-with-windows-server-20032008/
+
+RSA 2017 (Sysinternals Sysmon Presentation): https://onedrive.live.com/view.aspx?resid=D026B4699190F1E6!2843&ithint=file%2cpptx&app=PowerPoint&authkey=!AMvCRTKB_V1J5ow
+
+Solarwinds Windows Event Log Forwarder:
+http://downloads.solarwinds.com/solarwinds/Release/FreeTool/SolarWinds-LogForwarder-FreeTool-v1.2.0.zip 
+http://www.solarwinds.com/free-tools/event-log-forwarder-for-windows
+
+
+
