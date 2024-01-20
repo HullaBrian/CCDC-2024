@@ -29,6 +29,7 @@ New-Item -ItemType Directory -Path $installDirPath -Force
 $executableDirectory = Join-Path $programFilesPath "Sysmon"
 
 Write-Host "Downloading Sysmon.zip to '$tempDownloadPath'"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile $tempDownloadPath
 $newDownloadPath = [System.IO.Path]::ChangeExtension($tempDownloadPath, "zip")
 Rename-Item -Path $tempDownloadPath -NewName $newDownloadPath
